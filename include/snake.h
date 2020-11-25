@@ -1,26 +1,29 @@
 
+#ifndef SFML_GRAPHICS_H
+#include <SFML/Graphics.h>
+#endif
+
+#ifndef SNAKE_H
+#define SNAKE_H
+
+#define SNAKE_SPRITE_FILE "snake_sprite.png"
 #define SNAKE_MAX_LENGTH 50
-#define SNAKE_START_X 5 // Starting position for head
-#define SNAKE_START_Y 5
-#define SNAKE_START_LEN 2 // Doesn't include head or
 
-// Structure of coordinates in the map
-typedef struct{
-    int x;
-    int y;
-} Coordinate;
-
+typedef enum { Up, Down, Left, Right } Orientation;
 // Snake Structure
 typedef struct {
-    int head_x, head_y, head_px, head_py; // Location of the head of the snake
-    int length; // length of the snake
-    // Snake body locations
+	sfSprite *head;
+	sfVector2u headp;
     // This includes the tail but not the head
-    Coordinate locations[SNAKE_MAX_LENGTH];
-    int score; //Current score of the snake
+    sfSprite *snake_cells[SNAKE_MAX_LENGTH];
+	unsigned int length;
+	sfTexture textures[SNAKE_MAX_LENGTH];
 } Snake;
 
-// Initialize a snake structure
-// You want to assign initial values to each of the variables defined above
-// in the snake structure.
-void snake_init (Snake * snake);
+void snake_init (Snake *s);
+void snake_die (Snake *s, death_t death);
+sfSprite *get_snake_sprite(Snake *s, int l);
+void snake_move (Snake *s, Orientation dir);
+void snake_grow (Snake *s, unsigned int amount);
+
+#endif

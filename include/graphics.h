@@ -1,10 +1,12 @@
 // This file includes the graphics and should only be included in main.c
 // Anything that needs to be used in main has external linkage
 
+#ifndef SFML_GRAPHICS_H
+#include <SFML/Graphics.h>
+#endif
+
 #ifndef GRAPHICS_H
 #define GRAPHICS_H
-
-#include <SFML/Graphics>
 
 #define SCREEN_SIZE_X 410
 #define SCREEN_SIZE_Y 410

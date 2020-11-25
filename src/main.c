@@ -1,7 +1,10 @@
 
+#include <SFML/System.h>
+#include <SFML/Window.h>
 
-#include "map.h"
+#include "globals.h"
 #include "graphics.h"
+#include "map.h"
 #include "snake.h"
 
 #define CITY_HIT_MARGIN 1
@@ -39,40 +42,20 @@ int get_action() {
  * draw_game should not optimize drawing and should draw every tile, even if
  * the snake has not moved.
  */
-int update_game(int action)
-{
-	// Move the snake head
-	switch (action) {
-		case GO_LEFT:
-			snake.head_px = snake.head_x;
-			snake.head_x--;
-			break;
-		case GO_RIGHT:
-			snake.head_px = snake.head_x;
-			snake.head_x++;
-			break;
-		case GO_UP:
-			snake.head_py = snake.head_y;
-			snake.head_y++;
-			break;
-		case GO_DOWN:
-			snake.head_py = snake.head_y;
-			snake.head_y--;
-			break;
-	}
-	// Check for collision against a wall or enemy
-	int at_snake_head = get_here(snake.head_x, snake.head_y)->type;
-	if (at_snake_head == WALL) { return GAME_OVER; }
-	// Check for collision against other things...
+int update_game(int action) {
+    // Check for collision against a wall or enemy
+    int at_snake_head = get_here(snake.head_x, snake.head_y)->type;
+    if (at_snake_head == WALL) { return GAME_OVER; }
+    if (at_snake_head == GOODIE) { return }
 
-	// Check for collision against yourself while updating
-	Coordinate snake_tail = snake.locations[0];
-	for (int i = 0; i < snake.length-1; i++) {
-		// If true then we're garunteed to hit the body or tail
-		if (snake.head_x == snake.locations[i].x && snake.head_y ==
-			snake.locations[i].y) { return GAME_OVER; }
-    snake.locations[i].x = snake.locations[i+1].x;
-    snake.locations[i].y = snake.locations[i+1].y;
+    // Check for collision against yourself while updating rest of body and tail
+    Coordinate snake_tail = snake.locations[0];
+    for (int i = 0; i < snake.length-1; i++) {
+	// If true then we're garunteed to hit the body or tail
+	if (snake.head_x == snake.locations[i].x && snake.head_y ==
+	    snake.locations[i].y) { return GAME_OVER; }
+	snake.locations[i].x = snake.locations[i+1].x;
+	snake.locations[i].y = snake.locations[i+1].y;
     } // finish updating
     snake.locations[snake.length-1].x = snake.head_px;
     snake.locations[snake.length-1].y = snake.head_py;
@@ -93,13 +76,13 @@ int update_game(int action)
 void end_game() {
     // Create text object
     sfText *game_over_message = sfText_create();
-	sfText_setPosition(game_over_message, (sfVector2i){GAME_OVER_POS_X,
-		GAME_OVER_POS_Y)};
+    sfText_setPosition(game_over_message, (sfVector2i){GAME_OVER_POS_X,
+	GAME_OVER_POS_Y)};
 
     // De-allocate the maps
     for (int i = 0; i < NUM_MAPS; i++) {
-		set_active_map(i);
-		map_delete();
+	set_active_map(i);
+	map_delete();
     }
     sfRenderWindow_clear(window, sfBlack);
     sfRenderWindow_drawText(window, NULL);
@@ -113,43 +96,43 @@ void end_game() {
  * read like a road map for the rest of the code.
  */
 int main() {
-	// Allolacate data for sprites, shapes, and text
-	sfVector2u map_size = snakeGraphicsConstruct();
-	// Create hash table for map data
+    // Allolacate data for sprites, shapes, and text
+    sfVector2u map_size = snakeGraphicsConstruct();
+    // Create hash table for map data
     maps_init();
-	// Populate map with stuff
+    // Populate map with stuff
     init_main_map();
 
     set_active_map(0);
     snake.head_x = snake.head_y = 5;
     draw_game(FULL_DRAW);
 
-	sfClock *gclock = sfClock_create();
-	sfTime dt;
-	sfInt32 dtmm;
+    sfClock *gclock = sfClock_create();
+    sfTime dt;
+    sfInt32 dtmm;
 
-	sfEvent event;
-	int action, result;
-	while (sfRenderWindow_isOpen(window)) {
-		sfClock_restart(gclock);
+    sfEvent event;
+    int action, result;
+    while (sfRenderWindow_isOpen(window)) {
+	sfClock_restart(gclock);
 
-		while(sfRenderWindow_pollEvent(window, &event)) {
-			action = get_action(inputs);
-			if (event.type == sfEvtclosed) {
-				sfRenderWindow_close(window);
-			}
-			if (result == GAME_OVER) {
-				end_game();
-				return 0;
-			}
-		}
-		result = update_game(action);
-		draw_game(result);
-
-		// Compute update time
-		dt = sfClock_restart(gclock);
-		dtmm = sfTime_asMilliseconds(dt);
-		if (dtmm < 100) { sfSleep(sfTime_asMilliseconds(100 - dtmm)) };
+	while(sfRenderWindow_pollEvent(window, &event)) {
+	    action = get_action(inputs);
+	    if (event.type == sfEvtclosed) {
+		sfRenderWindow_close(window);
+	    }
+	    if (result == GAME_OVER) {
+		end_game();
+		return 0;
+	    }
 	}
+	result = update_game(action);
+	draw_game(result);
+
+	// Compute update time
+	dt = sfClock_restart(gclock);
+	dtmm = sfTime_asMilliseconds(dt);
+	if (dtmm < 100) { sfSleep(sfTime_asMilliseconds(100 - dtmm)) };
+    }
 }
 

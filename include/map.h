@@ -81,22 +81,21 @@ void map_erase(int x, int y);
 // Delete active map
 void map_delete();
 
-// The rest of these are designed to erase anything taht's already there
+// The rest of these are designed to erase from the screen anything
+// that's already there
 
 // This adds a wall of length 'len' (in cells)
 // x and y are the coordinates of the starting position
 // line is horizontal if 'horizontal' is true
 void add_wall(int x, int y, bool horizontal, int len);
 
-/**
- * Add a PLANT item at (x,y). If there is already a MapItem at (x,y), erase it
- * before adding the plant.
- */
+
 void add_plant(int x, int y);
 void add_goodie(int x, int y);
 void remove_goodie(int x, int y);
 void add_snake_body(int x, int y);
 void add_snake_head(int x, int y);
 void add_snake_tail(int x, int y);
+void grow_snake();
 
 #endif //MAP_H
