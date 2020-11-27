@@ -11,6 +11,8 @@
 #define SCREEN_SIZE_X 410
 #define SCREEN_SIZE_Y 410
 #define CELL_SIZE 40
+#define CELL_X 10
+#define CELL_Y 10
 
 #endif
 

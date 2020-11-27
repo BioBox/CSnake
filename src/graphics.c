@@ -13,11 +13,10 @@ sfTexture *snake_turn_texture;
 sfSprite *snake_head_sprite, *snake_tail_sprite, *snake_body_sprite;
 sfSprite *snake_turn_sprite;
 
-// Set up all graphics needed
-sfVector2i main_graphicsConstruct() {
-	unsigned int _cells_x = (int)(SCREEN_SIZE_X/CELL_SIZE);
-	unsigned int _cells_y = (int)(SCREEN_SIZE_Y/CELL_SIZE);
+sfCircleShape* menu_selector;
 
+// Set up all graphics needed
+void main_graphicsConstruct() {
 	sfGray = sfColor_fromRGB(GRAYNESS, GRAYNESS, GRAYNESS);
 	// Create the cells
 	for (int i = 0; i<cells_x; i++) {
@@ -66,7 +65,15 @@ sfVector2i main_graphicsConstruct() {
 	sfRectangleShape_setFillColor(eborder, BORDER_COLOR);
 	sfRectangleShape_setFillColor(wborder, BORDER_COLOR);
 
-	return (sfVector2u){_cells_x, _cells_y};
+	/* Right now there's just "Start Game" so no need for this rn */
+	// Make it relative to the option
+	// sfVector2f menu_select_pos = {};
+	// menu_selector = sfCircleShape_create();
+	// sfCircleShape_setRotation(menu_selector, 90.f);
+	// sfCircleShape_setFillColor(menu_selector, sfWhite);
+	// sfCircleShape_setScale(menu_selector, (sfVector2f){0.5f, 0.5f});
+	// sfCircleShape_setPointCount(menu_selector, 3);
+	// sfCircleShape_setPosition(menu_selector, menu_select_pos);
 }
 
 void main_graphicsDestroy() {

@@ -33,6 +33,7 @@ int get_action() {
 
     return 0;
 }
+
 /**
  * Update the game state based on the user action. For example, if the user
  * requests GO_UP, then this function should determine if that is possible by
@@ -51,11 +52,11 @@ int update_game(int action) {
     // Check for collision against yourself while updating rest of body and tail
     Coordinate snake_tail = snake.locations[0];
     for (int i = 0; i < snake.length-1; i++) {
-	// If true then we're garunteed to hit the body or tail
-	if (snake.head_x == snake.locations[i].x && snake.head_y ==
-	    snake.locations[i].y) { return GAME_OVER; }
-	snake.locations[i].x = snake.locations[i+1].x;
-	snake.locations[i].y = snake.locations[i+1].y;
+    // If true then we're garunteed to hit the body or tail
+    if (snake.head_x == snake.locations[i].x && snake.head_y ==
+    snake.locations[i].y) { return GAME_OVER; }
+    snake.locations[i].x = snake.locations[i+1].x;
+    snake.locations[i].y = snake.locations[i+1].y;
     } // finish updating
     snake.locations[snake.length-1].x = snake.head_px;
     snake.locations[snake.length-1].y = snake.head_py;
@@ -77,12 +78,12 @@ void end_game() {
     // Create text object
     sfText *game_over_message = sfText_create();
     sfText_setPosition(game_over_message, (sfVector2i){GAME_OVER_POS_X,
-	GAME_OVER_POS_Y)};
+    GAME_OVER_POS_Y)};
 
     // De-allocate the maps
     for (int i = 0; i < NUM_MAPS; i++) {
-	set_active_map(i);
-	map_delete();
+    set_active_map(i);
+    map_delete();
     }
     sfRenderWindow_clear(window, sfBlack);
     sfRenderWindow_drawText(window, NULL);
@@ -103,6 +104,8 @@ int main() {
     // Populate map with stuff
     init_main_map();
 
+    run_start_menu();
+
     set_active_map(0);
     snake.head_x = snake.head_y = 5;
     draw_game(FULL_DRAW);
@@ -114,25 +117,25 @@ int main() {
     sfEvent event;
     int action, result;
     while (sfRenderWindow_isOpen(window)) {
-	sfClock_restart(gclock);
+    sfClock_restart(gclock);
 
-	while(sfRenderWindow_pollEvent(window, &event)) {
-	    action = get_action(inputs);
-	    if (event.type == sfEvtclosed) {
-		sfRenderWindow_close(window);
-	    }
-	    if (result == GAME_OVER) {
-		end_game();
-		return 0;
-	    }
-	}
-	result = update_game(action);
-	draw_game(result);
+    while(sfRenderWindow_pollEvent(window, &event)) {
+    action = get_action(inputs);
+    if (event.type == sfEvtclosed) {
+    sfRenderWindow_close(window);
+    }
+    if (result == GAME_OVER) {
+    end_game();
+    return 0;
+    }
+    }
+    result = update_game(action);
+    draw_game(result);
 
-	// Compute update time
-	dt = sfClock_restart(gclock);
-	dtmm = sfTime_asMilliseconds(dt);
-	if (dtmm < 100) { sfSleep(sfTime_asMilliseconds(100 - dtmm)) };
+    // Compute update time
+    dt = sfClock_restart(gclock);
+    dtmm = sfTime_asMilliseconds(dt);
+    if (dtmm < 100) { sfSleep(sfTime_asMilliseconds(100 - dtmm)) };
     }
 }
 
