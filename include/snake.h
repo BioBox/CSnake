@@ -6,7 +6,7 @@
 #ifndef SNAKE_H
 #define SNAKE_H
 
-#define SNAKE_SPRITE_FILE "snake_sprite.png"
+#define SNAKE_SPRITE_FILE "media/snake_sprite.png"
 #define SNAKE_MAX_LENGTH 50
 
 typedef enum { Up, Down, Left, Right } Orientation;
