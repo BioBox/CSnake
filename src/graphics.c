@@ -1,12 +1,15 @@
 // This file implements the graphics
 // All of the shapes, spites, and functions for drawing them are defined here.
 
+#include "globals.h"
 #include "graphics.h"
+
+#define BORDER_COLOR sfWhite
 
 sfVertexArray *upper_status_line;
 sfVertexArray *lower_status_line;
 sfRectangleShape *nborder, *sborder, *eborder, *wborder;
-sfRectangleShape *cells[cells_x][cells_y];
+sfRectangleShape *cells[CELL_X][CELL_Y];
 
 sfTexture *snake_head_texture, *snake_tail_texture, *snake_body_texture;
 sfTexture *snake_turn_texture;
@@ -19,8 +22,8 @@ sfCircleShape* menu_selector;
 void main_graphicsConstruct() {
 	sfGray = sfColor_fromRGB(GRAYNESS, GRAYNESS, GRAYNESS);
 	// Create the cells
-	for (int i = 0; i<cells_x; i++) {
-		for (int j = 0; i<cells_y; i++) {
+	for (int i = 0; i<CELL_X; i++) {
+		for (int j = 0; i<CELL_Y; i++) {
 			cells[i][j] = sfRectangleShape_create();
 			sfRectangleShape_setPosition(cells[i][j], (sfVector2f){CELL_SIZE*i,
 				CELL_SIZE*j});
@@ -85,8 +88,8 @@ void main_graphicsDestroy() {
 	sfRectangleShape_destroy(eborder);
 	sfRectangleShape_destroy(wborder);
 
-	for (int i = 0; i<cells_x; i++) {
-		for (int i = 0; i<cells_y; i++) {
+	for (int i = 0; i<CELL_X; i++) {
+		for (int j = 0; j<CELL_Y; j++) {
 			sfRectangleShape_destroy(cells[i][j]);
 		}
 	}
@@ -102,7 +105,7 @@ void draw_nothing(int u, int v) {
  */
 void draw_upper_status() {
     // uLCD.line(0, 9, 127, 9, GREEN);
-    sfRenderWindow_drawVertexArray(window, upper_status_line);
+    sfRenderWindow_drawVertexArray(window, upper_status_line, NULL);
 }
 
 /**
@@ -110,7 +113,7 @@ void draw_upper_status() {
  */
 void draw_lower_status() {
     // uLCD.line(0, 118, 127, 118, GREEN);
-    sfRenderWindow_drawVertexArray(window, lower_status_line);
+    sfRenderWindow_drawVertexArray(window, lower_status_line, NULL);
 }
 
 /**
@@ -201,14 +204,14 @@ void draw_snake_head(int u, int v) {
     // uLCD.filled_rectangle(u, v, u+10, v+10, GREEN);
 	sfSprite_setPosition(snake_head_sprite, (sfVector2f){CELL_SIZE*u,
 		CELL_SIZE*v});
-	sfRenderWindow_drawSprite(window, snake_head_sprite);
+	sfRenderWindow_drawSprite(window, snake_head_sprite, NULL);
 }
 
 void draw_snake_tail(int u, int v) {
 	// uLCD.filled_rectangle(u, v, u+10, v+10, GREEN);
 	sfSprite_setPosition(snake_head_sprite, (sfVector2f){CELL_SIZE*u,
 		CELL_SIZE*v});
-	sfRenderWindow_drawSprite(window, snake_tail_sprite);
+	sfRenderWindow_drawSprite(window, snake_tail_sprite, NULL);
 }
 
 
