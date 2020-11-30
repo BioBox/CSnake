@@ -5,7 +5,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
-// #include <math.h>
+
+#ifndef SFML_GRAPHICS_H
+#include <SFML/Graphics.h>
+#endif
+
 #include "snake.h"
 #include "hash_table.h"
 
@@ -14,21 +18,26 @@
 // A structure to represent a map
 struct Map;
 
+typedef enum { Up, Down, Left, Right } Orientation;
 // Arguments are cell location, not pixel location
+typedef void (*DrawFunc)();
 typedef void (*DrawFunc)(int u, int v);
+typedef void (*DrawFunc)(int u, int v, Orientation o);
+typedef void (*DestroyFunc)(int u, int v);
 
 // Attributes of an individual cell in the map structure
+// If nothing's there, then the draw and destroy functions aren't there
+// There is no position attribute because that's the only way to get a certain
+// cell. There's no create function because why not do that when the type is
+// set?
 typedef struct {
-    int type; // What is it?
-    DrawFunc draw; // How do we draw it?
-    int walkable; // Can the snake travel on it?
-    void* data; // Extra data
+	int type; // What is it? Same as file name.
+	sfSprite *sprite;
+	DrawFunc draw; // How do we draw it?
+	DestroyFunc destroy; // How to destroy it?
+	bool walkable; // Can the snake travel on it?
+	void* data; // Extra data
 } MapItem;
-
-typedef struct {
-    int tm;
-    int tx, ty;
-} StairsData;
 
 // NO NO NO USE AN ENUMERATION!
 #define WALL    0
@@ -90,6 +99,7 @@ void map_delete();
 void add_wall(int x, int y, bool horizontal, int len);
 
 
+void add_wall(int x, int y);
 void add_plant(int x, int y);
 void add_goodie(int x, int y);
 void remove_goodie(int x, int y);
