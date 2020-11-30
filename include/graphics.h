@@ -9,7 +9,7 @@
 #define GRAPHICS_H
 
 #define GRAYNESS 105 // Control the darkness of gray
-#define BORDER_COLOR "sfWhite"
+#define BORDER_COLOR sfWhite
 #define BORDER_THICKNESS 5
 
 sfRenderWindow *window;
