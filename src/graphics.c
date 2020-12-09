@@ -1,7 +1,6 @@
 // This file implements the graphics
 // All of the shapes, spites, and functions for drawing them are defined here.
 
-#include "globals.h"
 #include "graphics.h"
 
 #define BORDER_COLOR sfWhite
@@ -9,14 +8,53 @@
 sfVertexArray *upper_status_line;
 sfVertexArray *lower_status_line;
 sfRectangleShape *nborder, *sborder, *eborder, *wborder;
-sfRectangleShape *cells[CELL_X][CELL_Y];
+sfVector2i cells[CELL_X][CELL_Y];
 
 sfTexture *snake_head_texture, *snake_tail_texture, *snake_body_texture;
 sfTexture *snake_turn_texture;
-sfSprite *snake_head_sprite, *snake_tail_sprite, *snake_body_sprite;
-sfSprite *snake_turn_sprite;
+sfSprite *snake_head_sprite, *snake_tail_sprite;
 
+sfTexture *plant_texture, *goodie_texture, *wall_texture;
 sfCircleShape* menu_selector;
+
+Snake snake;
+int random_seed = 0;
+
+void init_main_map() {
+	snake_init(&snake);
+
+	random_seed = (int)time(NULL);
+	srand(random_seed);
+	int goodie_rand = rand() % map_area();
+
+	printf("plants\r\n");
+
+	printf("Adding walls!\r\n");
+	add_wall(0,             0,              0,   map_width());
+	add_wall(0,             map_height()-1, 0,   map_width());
+	add_wall(0,             0,              1,	 map_height());
+	add_wall(map_width()-1, 0,              1,   map_height());
+	printf("Walls done!\r\n");
+
+	sfVector2i *snells = snake.snake_cells;
+	add_snake_head(snells->x, snells->y);
+	add_snake_head((snells+1)->x, (snells+1)->y);
+	add_snake_head((snells+2)->x, (snells+2)->y);
+
+	printf("Add extra chamber\r\n");
+	add_wall(30, 0, 0, 10);
+	add_wall(30, 10, 1, 10);
+	add_wall(39, 0, 1, 10);
+	printf("Added!\r\n");
+
+
+	// Add stairs to chamber (map 1)
+	//add_stairs(15, 5, 1, 5, 5);
+
+	//	  profile_hashtable();
+	print_map();
+}
+
 
 // Set up all graphics needed
 void main_graphicsConstruct() {
@@ -24,11 +62,8 @@ void main_graphicsConstruct() {
 	// Create the cells
 	for (int i = 0; i<CELL_X; i++) {
 		for (int j = 0; i<CELL_Y; i++) {
-			cells[i][j] = sfRectangleShape_create();
-			sfRectangleShape_setPosition(cells[i][j], (sfVector2f){CELL_SIZE*i,
-				CELL_SIZE*j});
-			sfRectangleShape_setSize(cells[i][j], (sfVector2f){CELL_SIZE, CELL_SIZE});
-			sfRectangleShape_setFillColor(cells[i][j], sfBlack);
+			cells[i][j].x = j*CELL_SIZE;
+			cells[i][j].y = i*CELL_SIZE;
 		}
 	}
 	upper_status_line = sfVertexArray_create();
@@ -87,17 +122,6 @@ void main_graphicsDestroy() {
 	sfRectangleShape_destroy(sborder);
 	sfRectangleShape_destroy(eborder);
 	sfRectangleShape_destroy(wborder);
-
-	for (int i = 0; i<CELL_X; i++) {
-		for (int j = 0; j<CELL_Y; j++) {
-			sfRectangleShape_destroy(cells[i][j]);
-		}
-	}
-}
-
-void draw_nothing(int u, int v) {
-    sfRectangleShape_setFillColor(cells[u][v], sfTransparent);
-	sfRenderWindow_drawRectangleShape(window, cells[u][v], NULL);
 }
 
 /**
@@ -124,20 +148,18 @@ void draw_border() {
     // uLCD.filled_rectangle(0,    13,   2, 114, WHITE); // Left
     // uLCD.filled_rectangle(0,   114, 127, 117, WHITE); // Bottom
     // uLCD.filled_rectangle(124,  14, 127, 117, WHITE); // Right
-    sfRenderWindow_drawRectangeShape(window, nborder, NULL);
-    sfRenderWindow_drawRectangeShape(window, sborder, NULL);
-    sfRenderWindow_drawRectangeShape(window, eborder, NULL);
-    sfRenderWindow_drawRectangeShape(window, wborder, NULL);
+    sfRenderWindow_drawRectangleShape(window, nborder, NULL);
+    sfRenderWindow_drawRectangleShape(window, sborder, NULL);
+    sfRenderWindow_drawRectangleShape(window, eborder, NULL);
+    sfRenderWindow_drawRectangleShape(window, wborder, NULL);
 }
 
-void draw_game() {
+void draw_game(int draw_option) {
 	int half_width = (int)(map_width()/2);
 	int half_height = (int)(map_height()/2);
     // Iterate over all visible map tiles
-    for (int i = -half_width; i <= half_width; i++) { // Iterate over columns of tiles
-        for (int j = -half_height; j <= half_height; j++) { // Iterate over one column of tiles
-            // Here, we have a given (i,j)
-
+    for (int i = -half_width; i <= half_width; i++) {
+        for (int j = -half_height; j <= half_height; j++) {
             // Get the reference point for our screen
             int x = i + snake.head_x;
             int y = j + snake.head_y;
@@ -146,27 +168,30 @@ void draw_game() {
             int px = i + snake.head_px;
             int py = j + snake.head_py;
 
+			int u = (i+5)*CELL_SIZE;
+			int v = (j+4)*CELL_SIZE;
             // Figure out what to draw
             DrawFunc draw = NULL;
-            if (x >= 0 && y >= 0 && x < map_width() && y < map_height()) { // Current (i,j) in the map
-                MapItem* curr_item = get_here(x, y);
-                MapItem* prev_item = get_here(px, py);
-                if (draw_option || curr_item != prev_item) { // Only draw if they're different
-                    if (curr_item) { // There's something here! Draw it
+			MapItem* curr_item;
+			MapItem* prev_item;
+            if (x >= 0 && y >= 0 && x < map_width() && y < map_height()) {
+                curr_item = get_here(x, y);
+                prev_item = get_here(px, py);
+                if (draw_option || curr_item != prev_item) {
+                    if (curr_item) {
                         draw = curr_item->draw;
-                    } else { // There used to be something, but now there isn't
+                    } else {
                         draw = draw_nothing;
                     }
                 } else if (curr_item && curr_item->type == CLEAR) {
-                    // This is a special case for erasing things like doors.
-                    draw = curr_item->draw; // i.e. draw_nothing
+                    draw = curr_item->draw;
                 }
-            } else if (draw_option) { // If doing a full draw, but we're out of bounds, draw the walls.
+            } else if (draw_option) {
                 draw = draw_wall;
             }
 
             // Actually draw the tile
-            if (draw) draw(u, v);
+            if (draw) draw(curr_item->data, u, v);
         }
     }
 
@@ -175,42 +200,115 @@ void draw_game() {
     draw_lower_status();
 }
 
-void draw_wall(int u, int v) {
+void add_wall(int x, int y, bool horizontal, int len) {
+	for(int i = 0; i < len; i++) {
+		MapItem* w1 = (MapItem*) malloc(sizeof(MapItem));
+		w1->type = WALL;
+		w1->draw = draw_wall;
+		w1->walkable = false;
+		w1->data = sfRectangleShape_create();
+		unsigned key = (horizontal ? map_2hash(x+i, y) : map_2hash(x, y+i));
+
+		void* val = insertItem(get_active_map()->items, key, w1);
+		if (val) free(val); // If something is already there, free it
+	}
+}
+
+void draw_wall(void *block, int u, int v) {
     // uLCD.filled_rectangle(u, v, u+10, v+10, BLACK);
-	sfRectangleShape_setFillColor(cells[i][j], sfGray);
-    sfRenderWindow_drawRectangleShape(window, cells[i][j], NULL);
+    sfRenderWindow_drawRectangleShape(window, block,  NULL);
+}
+
+void add_plant(int x, int y) {
+	MapItem* w1 = (MapItem*) malloc(sizeof(MapItem));
+	w1->type = PLANT;
+	w1->draw = draw_plant;
+	w1->walkable = false;
+	w1->data = sfRectangleShape_create();
+	sfRectangleShape_setFillColor(w1->data, sfMagenta);
+	sfSprite_setPosition(w1->data, (sfVector2f){x*CELL_SIZE, y*CELL_SIZE});
+
+	void* val = insertItem(get_active_map()->items, map_2hash(x, y), w1);
+	if (val) free(val); // If something is already there, free it
 }
 
 // For now imagine it's a flower
-void draw_plant(int u, int v) {
+void draw_plant(void *sprite, int u, int v) {
     // uLCD.filled_rectangle(u, v, u+10, v+10, GREEN);
-	sfRectangleShape_setFillColor(cells[i][j], sfMagenta);
-	sfRenderWindow_drawRectangleShape(window, cells[i][j], NULL);
+	sfRenderWindow_drawRectangleShape(window, sprite, NULL);
 }
 
-void draw_goodie(int u, int v) {
-    // uLCD.filled_rectangle(u, v, u+10, v+10, GREEN);
-	sfRectangleShape_setFillColor(cells[i][j], sfCyan);
-	sfRenderWindow_drawRectangleShape(window, cells[i][j], NULL);
+void add_goodie(int x, int y) {
+	MapItem* w1 = (MapItem*) malloc(sizeof(MapItem));
+	w1->type = GOODIE;
+	w1->draw = draw_goodie;
+	w1->walkable = true;
+	w1->data = sfSprite_create();
+	sfSprite_setPosition(w1->data, (sfVector2f){x*CELL_SIZE, y*CELL_SIZE});
+	sfSprite_setTexture(w1->data, goodie_texture, sfFalse);
+
+	void* val = insertItem(get_active_map()->items, map_2hash(x, y), w1);
+	if (val) free(val); // If something is already there, free it
 }
 
-void draw_snake_body(int u, int v) {
+void draw_goodie(void *sprite, int u, int v) {
     // uLCD.filled_rectangle(u, v, u+10, v+10, GREEN);
-	sfRectangleShape_setFillColor(cells[i][j], sfGreen);
-	sfRenderWindow_drawRectangleShape(window, cells[i][j], NULL);
+	sfRenderWindow_drawSprite(window, sprite, NULL);
 }
 
-void draw_snake_head(int u, int v) {
+void remove_goodie(void *sprite) {
+	sfSprite_destroy(sprite);
+}
+
+void add_snake_body(int x, int y) {
+	MapItem* w1 = (MapItem*) malloc(sizeof(MapItem));
+	w1->type = SNAKE_BODY;
+	w1->draw = draw_snake_body;
+	w1->walkable = false;
+	w1->data = sfSprite_create();
+	sfSprite_setPosition(w1->data, (sfVector2f){x*CELL_SIZE, y*CELL_SIZE});
+	sfSprite_setTexture(w1->data, snake_body_texture, sfFalse);
+
+	void* val = insertItem(get_active_map()->items, map_2hash(x, y), w1);
+	if (val) free(val); // If something is already there, free it
+}
+
+void draw_snake_body(void *sprite, int u, int v) {
     // uLCD.filled_rectangle(u, v, u+10, v+10, GREEN);
-	sfSprite_setPosition(snake_head_sprite, (sfVector2f){CELL_SIZE*u,
-		CELL_SIZE*v});
+	sfRenderWindow_drawSprite(window, sprite, NULL);
+}
+
+void add_snake_head(int x, int y) {
+	MapItem* w1 = (MapItem*) malloc(sizeof(MapItem));
+	w1->type = SNAKE_BODY;
+	w1->draw = draw_snake_head;
+	w1->walkable = false;
+	w1->data = sfSprite_create();
+	sfSprite_setPosition(w1->data, (sfVector2f){x*CELL_SIZE, y*CELL_SIZE});
+	sfSprite_setTexture(w1->data, snake_head_texture, sfFalse);
+
+	void* val = insertItem(get_active_map()->items, map_2hash(x, y), w1);
+	if (val) free(val); // If something is already there, free it
+}
+
+void draw_snake_head(void *sprite, int u, int v) {
+    // uLCD.filled_rectangle(u, v, u+10, v+10, GREEN);
 	sfRenderWindow_drawSprite(window, snake_head_sprite, NULL);
 }
 
-void draw_snake_tail(int u, int v) {
+void add_snake_tail(int x, int y) {
+	MapItem* w1 = (MapItem*) malloc(sizeof(MapItem));
+	w1->type = SNAKE_BODY;
+	w1->draw = draw_snake_tail;
+	w1->walkable = false;
+	w1->data = NULL;
+
+	void* val = insertItem(get_active_map()->items, map_2hash(x, y), w1);
+	if (val) free(val); // If something is already there, free it
+}
+
+void draw_snake_tail(void *sprite, int u, int v) {
 	// uLCD.filled_rectangle(u, v, u+10, v+10, GREEN);
-	sfSprite_setPosition(snake_head_sprite, (sfVector2f){CELL_SIZE*u,
-		CELL_SIZE*v});
 	sfRenderWindow_drawSprite(window, snake_tail_sprite, NULL);
 }
 

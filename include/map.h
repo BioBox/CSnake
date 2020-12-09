@@ -10,20 +10,20 @@
 #include <SFML/Graphics.h>
 #endif
 
-#include "snake.h"
 #include "hash_table.h"
 
 #define HASH_RANGE 410
 #define NUM_MAPS 1
 // A structure to represent a map
-struct Map;
+typedef struct {
+	HashTable* items;
+	int w, h;
+} Map;
 
-typedef enum { Up, Down, Left, Right } Orientation;
+
 // Arguments are cell location, not pixel location
-typedef void (*DrawFunc)();
-typedef void (*DrawFunc)(int u, int v);
-typedef void (*DrawFunc)(int u, int v, Orientation o);
-typedef void (*DestroyFunc)(int u, int v);
+typedef void (*DrawFunc)(void *sprite, int u, int v);
+typedef void (*DestroyFunc)();
 
 // Attributes of an individual cell in the map structure
 // If nothing's there, then the draw and destroy functions aren't there
@@ -57,6 +57,9 @@ typedef struct {
 // This does NOT create a level on its own. For that look at init_main_map below
 void maps_init();
 
+unsigned map_hash(unsigned key);
+unsigned map_2hash(int x, int y);
+
 // Populate the level with stuff (including the snake)
 void init_main_map();
 
@@ -89,23 +92,5 @@ void map_erase(int x, int y);
 
 // Delete active map
 void map_delete();
-
-// The rest of these are designed to erase from the screen anything
-// that's already there
-
-// This adds a wall of length 'len' (in cells)
-// x and y are the coordinates of the starting position
-// line is horizontal if 'horizontal' is true
-void add_wall(int x, int y, bool horizontal, int len);
-
-
-void add_wall(int x, int y);
-void add_plant(int x, int y);
-void add_goodie(int x, int y);
-void remove_goodie(int x, int y);
-void add_snake_body(int x, int y);
-void add_snake_head(int x, int y);
-void add_snake_tail(int x, int y);
-void grow_snake();
 
 #endif //MAP_H
